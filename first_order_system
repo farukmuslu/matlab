@@ -1,0 +1,25 @@
+%% Birinci dereceden sistem tasarımı
+%PI sıfırı ile sistem kutbu götürüldü. sistem sıfır -0.3 noktasında öyleyse
+%PI K*(s+0.3)/s şeklinde olmalı. K katsayısı 1. der tasarım ile
+%bulunabilir.
+ clear;clc;
+ syms s;
+ os = 0; zeta =1; %kritik sönümlü
+ ts = 1;
+ Gs = tf(300,[1 0.3]);
+ Gss = 300/(s+0.3);
+ tau = ts/4; %yaklaşım
+ Desired_Gs = 1/(tau*s+1);
+ syms K real;
+ PI = K*(s+0.3)/s;
+ Tss = PI*Gss/(1+PI*Gss);
+ Tss = simplifyFraction(Tss);
+ 
+ [pzs,pcs] = numden(Tss);
+ [~,pds] = numden(Desired_Gs);
+ prob = coeffs(pcs,s) == coeffs(pds,s);
+ kval = double(solve(prob));
+ PI = tf([kval kval*0.3],[1 0]); %PI
+ Ts = feedback(PI*Gs,1);         %kapalı çevrim elde edildi.
+ A_C = PI*Ts;                    %açık çevrim t.f.
+ figure(1); step(Ts);            %birim basamak yanıtı
