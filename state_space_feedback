@@ -1,0 +1,33 @@
+clc;clear; syms s;
+format long;
+km = 0.1; kt = 0.1; % aynı değişken
+kb = 0.1;
+kf = 0.2; D = 0.2; % aynı değişken
+J = 0.02; R = 2.0; L = 0.5;
+
+A = [-R/L 0 -kb/L;0 0 1;kt/J 0 -D/J];
+B = [1/L 0 0]';
+C = [0 1 0]; 
+D = 0;
+
+Gs = tf(ss(A,B,C,D));
+Gss = 10/(s^3+14*s^2+41*s);
+os = 0.2; ts = 3;
+zeta = -log(os)/(sqrt(pi^2 +log(os)^2));
+wn = 4/(zeta*ts);
+pds = (s^2+2*zeta*wn*s+wn^2)*(s+20);
+coef = double(fliplr(coeffs(expand(pds),s)));
+pcA = coef(1)*A*A*A + coef(2)*A*A + coef(3)*A + coef(4)*eye(length(A));
+phi = [B,A*B,A*A*B];
+
+K = [0 0 1]*inv(phi)*pcA;
+
+Ts = tf(ss(A-B*K,B,C-D*K,D));
+[y,t] = step(Ts);
+pregain = 1/dcgain(Ts);
+step(pregain*Ts);
+zpk(Ts)
+
+
+figure(1);rlocus(Ts);
+figure(2);margin(Ts);
